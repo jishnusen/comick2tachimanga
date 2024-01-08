@@ -2,7 +2,12 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 import requests
+import csv
 
+@dataclass
+class Entry:
+    title: str
+    read: int
 
 @dataclass
 class Manga:
@@ -37,10 +42,14 @@ def search_title(title: str) -> Optional[Manga]:
     print(ret)
     return ret
 
-def load_export(csv: str) -> List[Manga]:
-    names = []
-    with open(csv) as f:
-        names = [l.split(",")[0] for l in f.readlines()]
+def get_entries(fname: str) -> List[Entry]:
+    with open(fname) as f:
+        rows = csv.DictReader(f)
+        entries = [Entry(title=r['title'], read=float(r['read'] or '0')) for r in rows]
 
-    return [m for n in names if (m := search_title(n))]
+    return entries
 
+def load_export(fname: str) -> List[Manga]:
+    entries = get_entries(fname)
+
+    return [m for e in entries if (m := search_title(e.title))]
